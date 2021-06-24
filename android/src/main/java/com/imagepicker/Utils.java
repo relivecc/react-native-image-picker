@@ -78,7 +78,7 @@ public class Utils {
         return FileProvider.getUriForFile(reactContext, authority, file);
     }
 
-    public static void saveToPublicDirectory(Uri uri, Context context, String mediaType) {
+    public static Uri saveToPublicDirectory(Uri uri, Context context, String mediaType) {
         ContentResolver resolver = context.getContentResolver();
         Uri mediaStoreUri;
         ContentValues fileDetails = new ContentValues();
@@ -94,6 +94,7 @@ public class Utils {
         }
 
         copyUri(uri, mediaStoreUri, resolver);
+        return mediaStoreUri;
     }
 
     public static void copyUri(Uri fromUri, Uri toUri, ContentResolver resolver) {
@@ -387,11 +388,15 @@ public class Utils {
         String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
+        ContentResolver resolver = context.getContentResolver();
+        String fileType = resolver.getType(uri);
+
+
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
-        map.putString("type", getMimeTypeFromFileUri(uri));
+        map.putString("type", getFileTypeFromMime(fileType));
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
 
@@ -418,7 +423,7 @@ public class Utils {
             Uri uri = fileUris.get(i);
 
             if (isImageType(uri, context)) {
-                if (uri.getScheme().contains("content")) {
+                if (uri.getScheme().contains("content") && !options.saveToPhotos) {
                     uri = getAppSpecificStorageUri(uri, context);
                 }
                 uri = resizeImage(uri, context, options);
