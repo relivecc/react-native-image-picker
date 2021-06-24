@@ -161,7 +161,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     void onAssetsObtained(List<Uri> fileUris) {
         try {
-            callback.invoke(getResponseMap(fileUris, publicFileUris, options, reactContext));
+            callback.invoke(getResponseMap(fileUris, options, reactContext));
         } catch (RuntimeException exception) {
             callback.invoke(getErrorMap(errOthers, exception.getMessage()));
         } finally {
