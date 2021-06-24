@@ -384,18 +384,19 @@ public class Utils {
         return fileUris;
     }
 
-    static ReadableMap getImageResponseMap(Uri uri, Uri publicUri, Options options, Context context) {
+    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
+        ContentResolver resolver = context.getContentResolver();
+        String fileType = resolver.getType(uri);
+
+
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
-        if (publicUri != null) {
-            map.putString("publicUri", publicUri.toString());
-        }
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
-        map.putString("type", getMimeTypeFromFileUri(uri));
+        map.putString("type", getFileTypeFromMime(fileType));
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
 
@@ -415,22 +416,18 @@ public class Utils {
         return map;
     }
 
-    static ReadableMap getResponseMap(List<Uri> fileUris, List<Uri> publicFileUris, Options options, Context context) throws RuntimeException {
+    static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
         WritableArray assets = Arguments.createArray();
 
         for(int i = 0; i < fileUris.size(); ++i) {
             Uri uri = fileUris.get(i);
 
             if (isImageType(uri, context)) {
-                if (uri.getScheme().contains("content")) {
+                if (uri.getScheme().contains("content") && !options.saveToPhotos) {
                     uri = getAppSpecificStorageUri(uri, context);
                 }
                 uri = resizeImage(uri, context, options);
-                Uri publicUri = null;
-                if (i < publicFileUris.size()) {
-                    publicUri = publicFileUris.get(i);
-                }
-                assets.pushMap(getImageResponseMap(uri, publicUri, options, context));
+                assets.pushMap(getImageResponseMap(uri, options, context));
             } else if (isVideoType(uri, context)) {
                 assets.pushMap(getVideoResponseMap(uri, context));
             } else {

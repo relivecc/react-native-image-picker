@@ -17,7 +17,6 @@ import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.imagepicker.Utils.*;
@@ -160,7 +159,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
     }
 
-    void onAssetsObtained(List<Uri> fileUris, List<Uri> publicFileUris) {
+    void onAssetsObtained(List<Uri> fileUris) {
         try {
             callback.invoke(getResponseMap(fileUris, publicFileUris, options, reactContext));
         } catch (RuntimeException exception) {
@@ -186,29 +185,29 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
-        List<Uri> publicFileUris = new ArrayList<>();
-
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
                 if (options.saveToPhotos) {
                     Uri publicFileUri = saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
-                    publicFileUris.add(publicFileUri);
+                    onAssetsObtained(Collections.singletonList(publicFileUri));
+                    break;
                 }
 
-                onAssetsObtained(Collections.singletonList(fileUri), publicFileUris);
+                onAssetsObtained(Collections.singletonList(fileUri));
                 break;
 
             case REQUEST_LAUNCH_LIBRARY:
-                onAssetsObtained(collectUrisFromData(data), publicFileUris);
+                onAssetsObtained(collectUrisFromData(data));
                 break;
 
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
                 if (options.saveToPhotos) {
                     Uri publicFileUri = saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
-                    publicFileUris.add(publicFileUri);
+                    onAssetsObtained(Collections.singletonList(publicFileUri));
+                    break;
                 }
 
-                onAssetsObtained(Collections.singletonList(fileUri), publicFileUris);
+                onAssetsObtained(Collections.singletonList(fileUri));
                 break;
         }
     }
