@@ -78,7 +78,7 @@ public class Utils {
         return FileProvider.getUriForFile(reactContext, authority, file);
     }
 
-    public static void saveToPublicDirectory(Uri uri, Context context, String mediaType) {
+    public static Uri saveToPublicDirectory(Uri uri, Context context, String mediaType) {
         ContentResolver resolver = context.getContentResolver();
         Uri mediaStoreUri;
         ContentValues fileDetails = new ContentValues();
@@ -94,6 +94,7 @@ public class Utils {
         }
 
         copyUri(uri, mediaStoreUri, resolver);
+        return mediaStoreUri;
     }
 
     public static void copyUri(Uri fromUri, Uri toUri, ContentResolver resolver) {
@@ -383,12 +384,15 @@ public class Utils {
         return fileUris;
     }
 
-    static ReadableMap getImageResponseMap(Uri uri, Options options, Context context) {
+    static ReadableMap getImageResponseMap(Uri uri, Uri publicUri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         int[] dimensions = getImageDimensions(uri, context);
 
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
+        if (publicUri != null) {
+            map.putString("publicUri", publicUri.toString());
+        }
         map.putDouble("fileSize", getFileSize(uri, context));
         map.putString("fileName", fileName);
         map.putString("type", getMimeTypeFromFileUri(uri));
@@ -411,7 +415,7 @@ public class Utils {
         return map;
     }
 
-    static ReadableMap getResponseMap(List<Uri> fileUris, Options options, Context context) throws RuntimeException {
+    static ReadableMap getResponseMap(List<Uri> fileUris, List<Uri> publicFileUris, Options options, Context context) throws RuntimeException {
         WritableArray assets = Arguments.createArray();
 
         for(int i = 0; i < fileUris.size(); ++i) {
@@ -422,7 +426,11 @@ public class Utils {
                     uri = getAppSpecificStorageUri(uri, context);
                 }
                 uri = resizeImage(uri, context, options);
-                assets.pushMap(getImageResponseMap(uri, options, context));
+                Uri publicUri = null;
+                if (i < publicFileUris.size()) {
+                    publicUri = publicFileUris.get(i);
+                }
+                assets.pushMap(getImageResponseMap(uri, publicUri, options, context));
             } else if (isVideoType(uri, context)) {
                 assets.pushMap(getVideoResponseMap(uri, context));
             } else {

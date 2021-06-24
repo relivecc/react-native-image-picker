@@ -20,6 +20,7 @@ export interface CameraOptions
 export interface Asset {
   base64?: string;
   uri?: string;
+  publicUri?: string;
   width?: number;
   height?: number;
   fileSize?: number;

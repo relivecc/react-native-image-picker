@@ -17,6 +17,7 @@ import com.facebook.react.module.annotations.ReactModule;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.imagepicker.Utils.*;
@@ -159,9 +160,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
     }
 
-    void onAssetsObtained(List<Uri> fileUris) {
+    void onAssetsObtained(List<Uri> fileUris, List<Uri> publicFileUris) {
         try {
-            callback.invoke(getResponseMap(fileUris, options, reactContext));
+            callback.invoke(getResponseMap(fileUris, publicFileUris, options, reactContext));
         } catch (RuntimeException exception) {
             callback.invoke(getErrorMap(errOthers, exception.getMessage()));
         } finally {
@@ -185,25 +186,29 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
+        List<Uri> publicFileUris = new ArrayList<>();
+
         switch (requestCode) {
             case REQUEST_LAUNCH_IMAGE_CAPTURE:
                 if (options.saveToPhotos) {
-                    saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
+                    Uri publicFileUri = saveToPublicDirectory(cameraCaptureURI, reactContext, "photo");
+                    publicFileUris.add(publicFileUri);
                 }
 
-                onAssetsObtained(Collections.singletonList(fileUri));
+                onAssetsObtained(Collections.singletonList(fileUri), publicFileUris);
                 break;
 
             case REQUEST_LAUNCH_LIBRARY:
-                onAssetsObtained(collectUrisFromData(data));
+                onAssetsObtained(collectUrisFromData(data), publicFileUris);
                 break;
 
             case REQUEST_LAUNCH_VIDEO_CAPTURE:
                 if (options.saveToPhotos) {
-                    saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
+                    Uri publicFileUri = saveToPublicDirectory(cameraCaptureURI, reactContext, "video");
+                    publicFileUris.add(publicFileUri);
                 }
 
-                onAssetsObtained(Collections.singletonList(fileUri));
+                onAssetsObtained(Collections.singletonList(fileUri), publicFileUris);
                 break;
         }
     }
